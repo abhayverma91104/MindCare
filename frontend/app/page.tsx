@@ -140,7 +140,7 @@ export default function HomePage() {
         {/* Stats */}
         <div className="mt-32 grid grid-cols-3 gap-12 max-w-3xl mx-auto items-center justify-center">
           {[
-            { value: "4", label: "Emotion Classes" },
+            { value: "5", label: "Emotion Classes" },
             { value: "3+", label: "ML Models" },
             { value: "100%", label: "Private & Secure" },
           ].map((s) => (
@@ -159,10 +159,8 @@ export default function HomePage() {
         <h2 className="text-4xl md:text-5xl font-bold text-center mb-6 tracking-tight">
           Everything you need to <span className="gradient-text">thrive</span>
         </h2>
-        <p className="text-lg text-center mb-20 font-light" style={{ color: "var(--text-secondary)" }}>
-          Powered by production-grade AI — designed with beautiful symmetry.
-        </p>
-        
+
+
         {/* Uniform Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full auto-rows-[280px]">
           {features.map((f) => (
@@ -214,8 +212,8 @@ export default function HomePage() {
         className="px-6 py-8 flex flex-col items-center justify-center text-center text-xs w-full"
         style={{ color: "var(--text-secondary)", borderTop: "1px solid var(--border)" }}
       >
-        <p>MindCare © 2024 · Built with TensorFlow, Django, Next.js & Google Gemini</p>
-        <p className="mt-1">Not a substitute for professional mental health care. Crisis line: iCall 9152987821</p>
+        <p>MindCare © 2026 · Built with 🫶🏻 by Abhay and Guneet</p>
+        <p className="mt-1">Not a substitute for professional mental health care. Crisis line: 7017632799</p>
       </footer>
     </main>
   );
