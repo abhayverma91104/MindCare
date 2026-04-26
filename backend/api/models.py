@@ -8,6 +8,7 @@ from django.db import models
 
 class UserSession(models.Model):
     """Represents a user session identified by a UUID."""
+    id            = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user_id       = models.CharField(max_length=64, unique=True, db_index=True)
     created_at    = models.DateTimeField(auto_now_add=True)
     updated_at    = models.DateTimeField(auto_now=True)
@@ -25,6 +26,7 @@ class Prediction(models.Model):
     """Stores a stress + burnout prediction result."""
     STRESS_CHOICES = [("Low", "Low"), ("Moderate", "Moderate"), ("High", "High")]
 
+    id           = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     session      = models.ForeignKey(UserSession, on_delete=models.CASCADE,
                                      related_name="predictions", null=True, blank=True)
     stress_level = models.CharField(max_length=10, choices=STRESS_CHOICES)
@@ -41,6 +43,7 @@ class ChatMessage(models.Model):
     """Stores a single chat message with snapshot of the detected context."""
     ROLE_CHOICES = [("user", "user"), ("assistant", "assistant")]
 
+    id           = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     session      = models.ForeignKey(UserSession, on_delete=models.CASCADE,
                                      related_name="messages")
     role         = models.CharField(max_length=12, choices=ROLE_CHOICES)

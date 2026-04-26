@@ -88,4 +88,4 @@ STATIC_URL = "/static/"
 MODELS_DIR    = str(Path(__file__).resolve().parent.parent.parent / "models")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
