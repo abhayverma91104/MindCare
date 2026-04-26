@@ -1,0 +1,34 @@
+{
+  "best_classifier": "Logistic Regression",
+  "results": {
+    "Logistic Regression": {
+      "accuracy": 0.985,
+      "f1": 0.9849
+    },
+    "Random Forest": {
+      "accuracy": 0.8275,
+      "f1": 0.811
+    },
+    "SVM": {
+      "accuracy": 0.92,
+      "f1": 0.919
+    }
+  },
+  "features": [
+    "dass_stress",
+    "dass_anxiety",
+    "dass_depression",
+    "pss_score",
+    "sleep_hours",
+    "study_hours",
+    "social_hours",
+    "exercise_freq",
+    "caffeine_cups",
+    "screen_hours"
+  ],
+  "classes": [
+    "High",
+    "Low",
+    "Moderate"
+  ]
+}
