@@ -174,6 +174,28 @@ EMOTION_SENTENCES = {
         "Caught up on emails and updated my planner.",
         "Worked on a coding exercise for a few hours calmly.",
     ],
+    "joy": [
+        "I had a really great day today!",
+        "I finally aced that exam and I'm so happy.",
+        "I feel amazing and super productive right now.",
+        "Spent the afternoon hanging out with friends and laughing.",
+        "My professor praised my assignment, I'm thrilled.",
+        "Everything is going perfectly, I feel so much joy.",
+        "I'm so excited about the upcoming weekend trip.",
+        "I solved a really hard problem today and feel proud.",
+        "It's sunny outside and my mood is fantastic.",
+        "I got an internship offer! Best day ever.",
+        "I feel energized and ready to take on anything.",
+        "Finally finished my project and it feels so good.",
+        "Life is beautiful, I just feel really grateful.",
+        "I had a great workout and feel wonderful.",
+        "I'm in such a good mood today, nothing can bring me down.",
+        "My grades were much better than expected!",
+        "I feel really positive about my future.",
+        "Just had the best cup of coffee and feeling joyful.",
+        "My friends surprised me today, I'm overjoyed.",
+        "I'm so happy I finally understand this topic."
+    ],
 }
 
 

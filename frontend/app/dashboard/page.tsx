@@ -118,24 +118,91 @@ function StatCard({
 export default function DashboardPage() {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [burnout] = useState(62);
-  const [stressLabel] = useState("Moderate");
+  const [burnout, setBurnout] = useState(0);
+  const [stressLabel, setStressLabel] = useState("Unknown");
+  const [trendData, setTrendData] = useState<any[]>([]);
+  const [emotionsData, setEmotionsData] = useState<any[]>([]);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [avgMood, setAvgMood] = useState("Unknown");
 
   useEffect(() => {
-    axios
-      .get(`${API}/recommend?user_id=${USER_ID}`)
-      .then((res) => setRecommendations(res.data.recommendations || []))
-      .catch(() => {
-        // Demo recs
-        setRecommendations([
+    const fetchData = async () => {
+      try {
+        const [recRes, histRes] = await Promise.all([
+          axios.get(`${API}/recommend?user_id=${USER_ID}`).catch(() => null),
+          axios.get(`${API}/history/${USER_ID}`).catch(() => null)
+        ]);
+
+        // Fallback demo recommendations
+        const defaultRecs = [
           { title: "Box Breathing", desc: "Inhale 4s → Hold 4s → Exhale 4s × 5", category: "Breathing" },
           { title: "Pomodoro Technique", desc: "25 min focus + 5 min break × 4", category: "Study" },
           { title: "Gratitude Journal", desc: "Write 3 things you're grateful for today", category: "Mental" },
           { title: "20-min Walk", desc: "Physical movement resets stress hormones", category: "Physical" },
           { title: "Sleep Before 11pm", desc: "7–9 hours improves cognitive function", category: "Sleep" },
-        ]);
-      })
-      .finally(() => setLoading(false));
+        ];
+
+        if (recRes && recRes.data.recommendations?.length > 0) {
+          setRecommendations(recRes.data.recommendations);
+        } else {
+          setRecommendations(defaultRecs);
+        }
+
+        if (histRes && histRes.data) {
+          const preds = histRes.data.predictions || [];
+          const msgs = histRes.data.messages || [];
+
+          if (preds.length > 0) {
+            setBurnout(preds[0].burnout_score || 0);
+            setStressLabel(preds[0].stress_level || "Unknown");
+            
+            const chartData = preds.slice(0, 7).reverse().map((p: any) => ({
+              day: new Date(p.created_at).toLocaleDateString("en-US", { weekday: 'short' }),
+              burnout: Math.round(p.burnout_score || 0),
+              stress: p.stress_level === "High" ? 3 : p.stress_level === "Moderate" ? 2 : 1
+            }));
+            setTrendData(chartData);
+          }
+
+          if (msgs.length > 0) {
+            setTotalSessions(msgs.length);
+            const counts: Record<string, number> = { "Anxious": 0, "Neutral": 0, "Sad": 0, "Angry": 0, "Joy": 0 };
+            let hasEmotions = false;
+            
+            msgs.forEach((m: any) => {
+              if (m.emotion) {
+                const cap = m.emotion.charAt(0).toUpperCase() + m.emotion.slice(1);
+                if (counts[cap] !== undefined) {
+                  counts[cap]++;
+                  hasEmotions = true;
+                }
+              }
+            });
+
+            if (hasEmotions) {
+              const topEmotion = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+              setAvgMood(topEmotion);
+              
+              setEmotionsData([
+                { name: "Anxious", value: counts["Anxious"] || 0, fill: "#f59e0b" },
+                { name: "Neutral", value: counts["Neutral"] || 0, fill: "#5b8dee" },
+                { name: "Sad",     value: counts["Sad"] || 0,     fill: "#7c6fdf" },
+                { name: "Angry",   value: counts["Angry"] || 0,   fill: "#ef4444" },
+                { name: "Joy",     value: counts["Joy"] || 0,     fill: "#3ecf8e" },
+              ]);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (typeof window !== "undefined") {
+      fetchData();
+    }
   }, []);
 
   const catColors: Record<string, string> = {
@@ -147,6 +214,9 @@ export default function DashboardPage() {
     Social:    "#ec4899",
     Lifestyle: "#6ee7b7",
   };
+
+  const displayTrend = trendData.length > 0 ? trendData : MOCK_TREND;
+  const displayEmotions = emotionsData.length > 0 ? emotionsData : MOCK_EMOTIONS;
 
   return (
     <div className="min-h-screen p-6 max-w-7xl mx-auto" style={{ background: "var(--bg-primary)" }}>
@@ -179,9 +249,9 @@ export default function DashboardPage() {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard icon={Activity}   label="Stress Level"   value={stressLabel}  sub="Current session"    color="#f59e0b" />
-        <StatCard icon={TrendingUp} label="Burnout Score"  value="62 / 100"     sub="↑ +8 from last week" color="#ef4444" />
-        <StatCard icon={Brain}      label="Sessions"       value="7"            sub="This week"          color="#7c6fdf" />
-        <StatCard icon={Star}       label="Avg. Mood"      value="Moderate"     sub="Based on emotions"  color="#3ecf8e" />
+        <StatCard icon={TrendingUp} label="Burnout Score"  value={`${Math.round(burnout)} / 100`}     sub="Latest tracked result" color="#ef4444" />
+        <StatCard icon={Brain}      label="Sessions"       value={String(totalSessions)}            sub="All time messages"          color="#7c6fdf" />
+        <StatCard icon={Star}       label="Avg. Mood"      value={avgMood}     sub="Based on emotions"  color="#3ecf8e" />
       </div>
 
       {/* Charts Row */}
@@ -196,7 +266,7 @@ export default function DashboardPage() {
         <div className="glass rounded-2xl p-6 lg:col-span-2">
           <h2 className="text-base font-semibold mb-4">7-Day Burnout Trend</h2>
           <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={MOCK_TREND}>
+            <LineChart data={displayTrend}>
               <defs>
                 <linearGradient id="burnoutGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%"   stopColor="#7c6fdf" stopOpacity={0.4} />
@@ -222,13 +292,13 @@ export default function DashboardPage() {
         <div className="glass rounded-2xl p-6">
           <h2 className="text-base font-semibold mb-4">Emotion Distribution</h2>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={MOCK_EMOTIONS} layout="vertical" barSize={14}>
+            <BarChart data={displayEmotions} layout="vertical" barSize={14}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
               <XAxis type="number" tick={{ fill: "var(--text-secondary)", fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" tick={{ fill: "var(--text-secondary)", fontSize: 12 }} axisLine={false} tickLine={false} width={55} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="value" radius={[0, 8, 8, 0]}>
-                {MOCK_EMOTIONS.map((e, i) => (
+                {displayEmotions.map((e, i) => (
                   <rect key={i} fill={e.fill} />
                 ))}
               </Bar>

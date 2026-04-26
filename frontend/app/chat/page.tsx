@@ -5,11 +5,17 @@ import Link from "next/link";
 import axios from "axios";
 import {
   Brain, Send, Settings, BarChart3, AlertTriangle,
-  User, Bot, RefreshCw, Mic,
+  User, Bot, RefreshCw, Mic, Clock
 } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-const USER_ID = "guest_" + Math.random().toString(36).slice(2, 10); // simple session
+const USER_ID = typeof window !== "undefined"
+  ? (localStorage.getItem("mindcare_uid") || (() => {
+    const uid = "guest_" + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem("mindcare_uid", uid);
+    return uid;
+  })())
+  : "guest_ssr";
 
 type Message = {
   id: string;
@@ -23,21 +29,22 @@ type Message = {
 
 const EMOTION_EMOJI: Record<string, string> = {
   anxious: "😰",
-  sad:     "😔",
-  angry:   "😤",
+  sad: "😔",
+  angry: "😤",
   neutral: "😐",
+  joy: "😚",
 };
 
 const STRESS_COLOR: Record<string, string> = {
-  Low:      "stress-low",
+  Low: "stress-low",
   Moderate: "stress-moderate",
-  High:     "stress-high",
+  High: "stress-high",
 };
 
 const PERSONALITIES = [
-  { value: "calm",    label: "🧘 Calm",    desc: "Gentle & grounding" },
-  { value: "coach",   label: "🏆 Coach",   desc: "Motivational" },
-  { value: "listener",label: "👂 Listener", desc: "Empathetic" },
+  { value: "calm", label: "🧘 Calm", desc: "Gentle & grounding" },
+  { value: "coach", label: "🏆 Coach", desc: "Motivational" },
+  { value: "listener", label: "👂 Listener", desc: "Empathetic" },
 ];
 
 const LANGUAGES = ["English", "Hindi", "Spanish", "French", "German", "Bengali", "Tamil", "Telugu", "Marathi"];
@@ -77,11 +84,10 @@ function ChatBubble({ msg }: { msg: Message }) {
       {/* Bubble */}
       <div className="max-w-[75%]">
         <div
-          className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-            isUser
+          className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${isUser
               ? "rounded-br-sm text-white"
               : "glass rounded-bl-sm"
-          } ${msg.crisis ? "border border-red-500/40" : ""}`}
+            } ${msg.crisis ? "border border-red-500/40" : ""}`}
           style={{
             background: isUser
               ? "linear-gradient(135deg, #7c6fdf, #5b8dee)"
@@ -121,24 +127,23 @@ function ChatBubble({ msg }: { msg: Message }) {
 }
 
 export default function ChatPage() {
-  const [messages, setMessages]     = useState<Message[]>([]);
-  const [input, setInput]           = useState("");
-  const [loading, setLoading]       = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
   const [personality, setPersonality] = useState("calm");
-  const [language, setLanguage]     = useState("English");
+  const [language, setLanguage] = useState("English");
   const [showSettings, setShowSettings] = useState(false);
-  const [stressLevel, setStressLevel]   = useState<string>("");
+  const [stressLevel, setStressLevel] = useState<string>("");
   const [burnoutScore, setBurnoutScore] = useState<number | null>(null);
   const [currentEmotion, setCurrentEmotion] = useState<string>("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef  = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // Initial greeting
   useEffect(() => {
     const greeting: Message = {
       id: "welcome",
@@ -147,7 +152,46 @@ export default function ChatPage() {
         "Hi! I'm MindCare 🌿 — your AI mental wellness companion. I'm here to listen, support, and help you navigate stress and burnout.\n\nHow are you feeling today?",
       ts: Date.now(),
     };
-    setMessages([greeting]);
+
+    const fetchHistory = async () => {
+      try {
+        const res = await axios.get(`${API}/history/${USER_ID}`);
+        let loadedMsgs: Message[] = [];
+        if (res.data?.messages?.length > 0) {
+          loadedMsgs = res.data.messages.map((m: any) => ({
+            id: String(m.id || Math.random()),
+            role: m.role,
+            content: m.content,
+            emotion: m.emotion,
+            stress_level: m.stress_level,
+            crisis: m.crisis_flag,
+            ts: new Date(m.created_at).getTime()
+          }));
+          const lastMsg = loadedMsgs[loadedMsgs.length - 1];
+          if (lastMsg.emotion) setCurrentEmotion(lastMsg.emotion);
+          if (lastMsg.stress_level) setStressLevel(lastMsg.stress_level);
+        }
+
+        if (loadedMsgs.length > 0) {
+          setMessages([greeting, ...loadedMsgs]);
+        } else {
+          setMessages([greeting]);
+        }
+
+        if (res.data?.predictions?.length > 0) {
+          const lastPred = res.data.predictions[0];
+          if (lastPred.burnout_score !== undefined) setBurnoutScore(lastPred.burnout_score);
+          if (lastPred.stress_level) setStressLevel(lastPred.stress_level);
+        }
+      } catch (err) {
+        console.error("Failed to load history", err);
+        setMessages([greeting]);
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      fetchHistory();
+    }
   }, []);
 
   const sendMessage = useCallback(async () => {
@@ -166,20 +210,20 @@ export default function ChatPage() {
 
     try {
       const res = await axios.post(`${API}/chat`, {
-        user_id:     USER_ID,
-        message:     userText,
+        user_id: USER_ID,
+        message: userText,
         personality,
         language,
       });
       const data = res.data;
       const botMsg: Message = {
-        id:           crypto.randomUUID(),
-        role:         "assistant",
-        content:      data.response,
-        emotion:      data.emotion,
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: data.response,
+        emotion: data.emotion,
         stress_level: data.stress_level,
-        crisis:       data.crisis,
-        ts:           Date.now(),
+        crisis: data.crisis,
+        ts: Date.now(),
       };
       setMessages((prev) => [...prev, botMsg]);
       if (data.stress_level) setStressLevel(data.stress_level);
@@ -187,10 +231,10 @@ export default function ChatPage() {
       if (data.emotion) setCurrentEmotion(data.emotion);
     } catch (err: unknown) {
       const errorMsg: Message = {
-        id:      crypto.randomUUID(),
-        role:    "assistant",
+        id: crypto.randomUUID(),
+        role: "assistant",
         content: "I'm having trouble connecting right now. Please check that the backend server is running and try again.",
-        ts:      Date.now(),
+        ts: Date.now(),
       };
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
@@ -261,8 +305,8 @@ export default function ChatPage() {
                       burnoutScore > 65
                         ? "var(--accent-red)"
                         : burnoutScore > 35
-                        ? "var(--accent-amber)"
-                        : "var(--accent-green)",
+                          ? "var(--accent-amber)"
+                          : "var(--accent-green)",
                   }}
                 />
               </div>
@@ -316,6 +360,13 @@ export default function ChatPage() {
 
         {/* Nav Links */}
         <div className="p-4 space-y-1" style={{ borderTop: "1px solid var(--border)" }}>
+          <Link
+            href="/history"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:text-white"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            <Clock className="w-4 h-4" /> History
+          </Link>
           <Link
             href="/dashboard"
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:text-white"

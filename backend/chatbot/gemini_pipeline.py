@@ -235,6 +235,20 @@ def chat(
     emotion        = (emotion_result or {}).get("emotion",        "neutral")
     confidence     = (emotion_result or {}).get("confidence",     0.5)
 
+    # Dynamic stress and burnout adjustment based on chat emotion
+    if emotion == "anxious":
+        stress_level = "High"
+        burnout_score = min(100.0, burnout_score + 3.0)
+    elif emotion == "sad" or emotion == "angry":
+        stress_level = "High" if burnout_score > 65 else "Moderate"
+        burnout_score = min(100.0, burnout_score + 2.0)
+    elif emotion == "joy":
+        stress_level = "Low"
+        burnout_score = max(0.0, burnout_score - 4.0)
+    else: # neutral
+        stress_level = "Low" if burnout_score < 40 else "Moderate"
+        burnout_score = max(0.0, burnout_score - 1.0)
+
     # NLP analysis
     nlp = analyze_text(user_message, emotion)
     sentiment_score = nlp["sentiment_score"]

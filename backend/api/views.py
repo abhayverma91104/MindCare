@@ -174,6 +174,16 @@ def chat_view(request):
         crisis_flag  = result.get("crisis", False),
     )
 
+    # Persist the dynamically updated stress/burnout as a formal Prediction
+    # This ensures that the Dashboard graphs and trend trackers update reliably.
+    Prediction.objects.create(
+        session       = session,
+        stress_level  = result.get("stress_level", "Moderate"),
+        burnout_score = result.get("burnout_score", 50.0),
+        probabilities = {},
+        raw_features  = {"source": "chat_inference"},
+    )
+
     return Response(result, status=status.HTTP_200_OK)
 
 
