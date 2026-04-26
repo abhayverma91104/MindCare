@@ -36,6 +36,9 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
+from dotenv import load_dotenv
+load_dotenv(os.path.join(ROOT, ".env"))
+
 from utils.nlp_analyzer import is_crisis, analyze_text
 
 # ── Configuration ─────────────────────────────────────────────────────────────
@@ -43,7 +46,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL   = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")  # fast & cost-efficient
 
 MEMORY_LIMIT   = 20          # max messages kept per session
-CRISIS_HOTLINE = "iCall (India): 9152987821  |  Vandrevala Foundation: 1860-2662-345  |  International: befrienders.org"
+CRISIS_HOTLINE = os.getenv("CRISIS_HOTLINE", "9152987821")
 
 PERSONALITY_MODES = {
     "coach": (

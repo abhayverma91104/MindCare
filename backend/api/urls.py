@@ -6,5 +6,6 @@ urlpatterns = [
     path("chat",                 views.chat_view,                 name="chat"),
     path("recommend",            views.recommend_view,            name="recommend"),
     path("history/<str:user_id>",views.history_view,              name="history"),
+    path("config",               views.config_view,               name="config"),
     path("health",               views.health_view,               name="health"),
 ]

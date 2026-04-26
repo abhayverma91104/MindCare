@@ -256,6 +256,40 @@ def history_view(request, user_id):
     }, status=status.HTTP_200_OK)
 
 
+# ── /api/config ────────────────────────────────────────────────────────────────
+
+@api_view(["GET"])
+def config_view(request):
+    """
+    GET /api/config
+    Returns project-wide configurations (so UI clients never hardcode them).
+    """
+    import os
+    from backend.chatbot.gemini_pipeline import CRISIS_HOTLINE
+
+    return Response({
+        "crisis_hotline": CRISIS_HOTLINE,
+        "languages": ["English", "Hindi", "Spanish", "French", "German", "Bengali", "Tamil", "Telugu", "Marathi"],
+        "personalities": [
+            { "value": "calm", "label": "🧘 Calm", "desc": "Gentle & grounding" },
+            { "value": "coach", "label": "🏆 Coach", "desc": "Motivational" },
+            { "value": "listener", "label": "👂 Listener", "desc": "Empathetic" },
+        ],
+        "emotion_emojis": {
+            "anxious": "😰",
+            "sad": "😔",
+            "angry": "😤",
+            "neutral": "😐",
+            "joy": "😚"
+        },
+        "stress_colors": {
+            "Low": "stress-low",
+            "Moderate": "stress-moderate",
+            "High": "stress-high"
+        }
+    }, status=status.HTTP_200_OK)
+
+
 # ── /api/health ───────────────────────────────────────────────────────────────
 
 @api_view(["GET"])
