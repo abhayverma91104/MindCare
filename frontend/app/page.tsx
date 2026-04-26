@@ -196,7 +196,7 @@ export default function HomePage() {
           </p>
           <Link
             href="/chat"
-            className="px-12 py-5 rounded-full text-lg font-bold text-white inline-flex items-center justify-center transition-all duration-300 hover:scale-105"
+            className="px-12 py-8 rounded-full text-lg font-bold text-white inline-flex items-center justify-center transition-all duration-300 hover:scale-105"
             style={{
               background: "linear-gradient(135deg, #7c6fdf, #5b8dee)",
               boxShadow: "0 10px 40px rgba(124,111,223,0.4)",
@@ -213,7 +213,7 @@ export default function HomePage() {
         style={{ color: "var(--text-secondary)", borderTop: "1px solid var(--border)" }}
       >
         <p>MindCare © 2026 · Built with 🫶🏻 by Abhay and Guneet</p>
-        <p className="mt-1">Not a substitute for professional mental health care. Crisis line: 7017632799</p>
+        <p className="mt-1">Not a substitute for professional mental health care. Crisis line: 9152987821</p>
       </footer>
     </main>
   );

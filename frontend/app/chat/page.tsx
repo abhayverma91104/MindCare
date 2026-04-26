@@ -27,27 +27,7 @@ type Message = {
   ts: number;
 };
 
-const EMOTION_EMOJI: Record<string, string> = {
-  anxious: "😰",
-  sad: "😔",
-  angry: "😤",
-  neutral: "😐",
-  joy: "😚",
-};
-
-const STRESS_COLOR: Record<string, string> = {
-  Low: "stress-low",
-  Moderate: "stress-moderate",
-  High: "stress-high",
-};
-
-const PERSONALITIES = [
-  { value: "calm", label: "🧘 Calm", desc: "Gentle & grounding" },
-  { value: "coach", label: "🏆 Coach", desc: "Motivational" },
-  { value: "listener", label: "👂 Listener", desc: "Empathetic" },
-];
-
-const LANGUAGES = ["English", "Hindi", "Spanish", "French", "German", "Bengali", "Tamil", "Telugu", "Marathi"];
+// Config constants are now fetched natively from GET /api/config
 
 function TypingIndicator() {
   return (
@@ -65,7 +45,7 @@ function TypingIndicator() {
   );
 }
 
-function ChatBubble({ msg }: { msg: Message }) {
+function ChatBubble({ msg, config }: { msg: Message, config: any }) {
   const isUser = msg.role === "user";
   return (
     <div className={`flex items-end gap-3 animate-fade-in-up ${isUser ? "flex-row-reverse" : ""}`}>
@@ -111,11 +91,11 @@ function ChatBubble({ msg }: { msg: Message }) {
                 className="text-xs px-2 py-0.5 rounded-full"
                 style={{ background: "var(--bg-input)", color: "var(--text-secondary)" }}
               >
-                {EMOTION_EMOJI[msg.emotion] || "🔵"} {msg.emotion}
+                {config?.emotion_emojis?.[msg.emotion] || "🔵"} {msg.emotion}
               </span>
             )}
             {msg.stress_level && (
-              <span className={`text-xs px-2 py-0.5 rounded-full ${STRESS_COLOR[msg.stress_level]} bg-stress-${msg.stress_level?.toLowerCase()}`}>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${config?.stress_colors?.[msg.stress_level] || ""} bg-stress-${msg.stress_level?.toLowerCase()}`}>
                 {msg.stress_level} stress
               </span>
             )}
@@ -127,6 +107,7 @@ function ChatBubble({ msg }: { msg: Message }) {
 }
 
 export default function ChatPage() {
+  const [config, setConfig] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -155,7 +136,11 @@ export default function ChatPage() {
 
     const fetchHistory = async () => {
       try {
-        const res = await axios.get(`${API}/history/${USER_ID}`);
+        const [confRes, res] = await Promise.all([
+          axios.get(`${API}/config`).catch(() => null),
+          axios.get(`${API}/history/${USER_ID}`)
+        ]);
+        if (confRes?.data) setConfig(confRes.data);
         let loadedMsgs: Message[] = [];
         if (res.data?.messages?.length > 0) {
           loadedMsgs = res.data.messages.map((m: any) => ({
@@ -279,7 +264,7 @@ export default function ChatPage() {
           {/* Stress */}
           <div className="glass rounded-xl p-3">
             <p className="text-xs mb-1" style={{ color: "var(--text-secondary)" }}>Stress Level</p>
-            <p className={`font-semibold text-lg ${stressLevel ? STRESS_COLOR[stressLevel] : ""}`}>
+            <p className={`font-semibold text-lg ${stressLevel ? config?.stress_colors?.[stressLevel] : ""}`}>
               {stressLevel || "—"}
             </p>
           </div>
@@ -317,7 +302,7 @@ export default function ChatPage() {
           <div className="glass rounded-xl p-3">
             <p className="text-xs mb-1" style={{ color: "var(--text-secondary)" }}>Emotion</p>
             <p className="font-semibold capitalize">
-              {currentEmotion ? `${EMOTION_EMOJI[currentEmotion]} ${currentEmotion}` : "—"}
+              {currentEmotion ? `${config?.emotion_emojis?.[currentEmotion] || "🔵"} ${currentEmotion}` : "—"}
             </p>
           </div>
 
@@ -325,7 +310,7 @@ export default function ChatPage() {
           <div>
             <p className="text-xs font-medium mb-2" style={{ color: "var(--text-secondary)" }}>Personality Mode</p>
             <div className="space-y-1.5">
-              {PERSONALITIES.map((p) => (
+              {config?.personalities?.map((p: any) => (
                 <button
                   key={p.value}
                   onClick={() => setPersonality(p.value)}
@@ -351,7 +336,7 @@ export default function ChatPage() {
               onChange={(e) => setLanguage(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm chat-input"
             >
-              {LANGUAGES.map((l) => (
+              {config?.languages?.map((l: string) => (
                 <option key={l} value={l}>{l}</option>
               ))}
             </select>
@@ -394,7 +379,7 @@ export default function ChatPage() {
           <div>
             <h1 className="font-semibold">Chat with MindCare</h1>
             <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
-              Mode: {PERSONALITIES.find((p) => p.value === personality)?.label} · {language}
+              Mode: {config?.personalities?.find((p: any) => p.value === personality)?.label || personality} · {language}
             </p>
           </div>
           <div className="flex items-center gap-1.5">
@@ -406,7 +391,7 @@ export default function ChatPage() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
           {messages.map((msg) => (
-            <ChatBubble key={msg.id} msg={msg} />
+            <ChatBubble key={msg.id} msg={msg} config={config} />
           ))}
           {loading && <TypingIndicator />}
           <div ref={bottomRef} />

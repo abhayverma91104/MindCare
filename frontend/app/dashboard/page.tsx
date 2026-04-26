@@ -12,25 +12,7 @@ import { Brain, MessageCircle, TrendingUp, Activity, Star, ArrowLeft } from "luc
 const API     = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 const USER_ID = typeof window !== "undefined" ? (localStorage.getItem("mindcare_uid") || "guest_demo") : "guest_demo";
 
-// ── Mock data for demo when backend not connected ─────────────────────────────
-const MOCK_TREND = [
-  { day: "Mon", burnout: 42, stress: 1 },
-  { day: "Tue", burnout: 55, stress: 2 },
-  { day: "Wed", burnout: 68, stress: 2 },
-  { day: "Thu", burnout: 73, stress: 3 },
-  { day: "Fri", burnout: 61, stress: 2 },
-  { day: "Sat", burnout: 45, stress: 1 },
-  { day: "Sun", burnout: 38, stress: 1 },
-];
-
-const MOCK_EMOTIONS = [
-  { name: "Anxious", value: 38, fill: "#f59e0b" },
-  { name: "Neutral", value: 30, fill: "#5b8dee" },
-  { name: "Sad",     value: 22, fill: "#7c6fdf" },
-  { name: "Angry",   value: 10, fill: "#ef4444" },
-];
-
-const STRESS_LABEL_MAP: Record<number, string> = { 1: "Low", 2: "Moderate", 3: "High" };
+// No more hardcoded MOCK data. Using dynamic fallback empty states directly in components.
 
 // ── Radial Gauge ──────────────────────────────────────────────────────────────
 function BurnoutGauge({ score }: { score: number }) {
@@ -84,7 +66,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <p className="font-semibold mb-1">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} style={{ color: p.color }}>
-          {p.name}: {p.name === "stress" ? STRESS_LABEL_MAP[p.value] || p.value : p.value}
+           {p.name}: {p.name === "stress" ? (p.value === 3 ? "High" : p.value === 2 ? "Moderate" : "Low") : p.value}
         </p>
       ))}
     </div>
@@ -133,19 +115,10 @@ export default function DashboardPage() {
           axios.get(`${API}/history/${USER_ID}`).catch(() => null)
         ]);
 
-        // Fallback demo recommendations
-        const defaultRecs = [
-          { title: "Box Breathing", desc: "Inhale 4s → Hold 4s → Exhale 4s × 5", category: "Breathing" },
-          { title: "Pomodoro Technique", desc: "25 min focus + 5 min break × 4", category: "Study" },
-          { title: "Gratitude Journal", desc: "Write 3 things you're grateful for today", category: "Mental" },
-          { title: "20-min Walk", desc: "Physical movement resets stress hormones", category: "Physical" },
-          { title: "Sleep Before 11pm", desc: "7–9 hours improves cognitive function", category: "Sleep" },
-        ];
-
         if (recRes && recRes.data.recommendations?.length > 0) {
           setRecommendations(recRes.data.recommendations);
         } else {
-          setRecommendations(defaultRecs);
+          setRecommendations([]);
         }
 
         if (histRes && histRes.data) {
@@ -215,8 +188,7 @@ export default function DashboardPage() {
     Lifestyle: "#6ee7b7",
   };
 
-  const displayTrend = trendData.length > 0 ? trendData : MOCK_TREND;
-  const displayEmotions = emotionsData.length > 0 ? emotionsData : MOCK_EMOTIONS;
+
 
   return (
     <div className="min-h-screen p-6 max-w-7xl mx-auto" style={{ background: "var(--bg-primary)" }}>
@@ -265,24 +237,30 @@ export default function DashboardPage() {
         {/* Trend Line */}
         <div className="glass rounded-2xl p-6 lg:col-span-2">
           <h2 className="text-base font-semibold mb-4">7-Day Burnout Trend</h2>
-          <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={displayTrend}>
-              <defs>
-                <linearGradient id="burnoutGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"   stopColor="#7c6fdf" stopOpacity={0.4} />
-                  <stop offset="95%"  stopColor="#7c6fdf" stopOpacity={0}   />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="day" tick={{ fill: "var(--text-secondary)", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis domain={[0, 100]} tick={{ fill: "var(--text-secondary)", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone" dataKey="burnout" stroke="#7c6fdf" strokeWidth={2.5}
-                dot={{ fill: "#7c6fdf", r: 4 }} activeDot={{ r: 6, stroke: "#fff" }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {trendData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={180}>
+              <LineChart data={trendData}>
+                <defs>
+                  <linearGradient id="burnoutGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"   stopColor="#7c6fdf" stopOpacity={0.4} />
+                    <stop offset="95%"  stopColor="#7c6fdf" stopOpacity={0}   />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="day" tick={{ fill: "var(--text-secondary)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} tick={{ fill: "var(--text-secondary)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Line
+                  type="monotone" dataKey="burnout" stroke="#7c6fdf" strokeWidth={2.5}
+                  dot={{ fill: "#7c6fdf", r: 4 }} activeDot={{ r: 6, stroke: "#fff" }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-48 text-sm" style={{ color: "var(--text-secondary)" }}>
+              No history tracked yet. Chat with MindCare to start your chart!
+            </div>
+          )}
         </div>
       </div>
 
@@ -291,19 +269,25 @@ export default function DashboardPage() {
         {/* Emotion Distribution */}
         <div className="glass rounded-2xl p-6">
           <h2 className="text-base font-semibold mb-4">Emotion Distribution</h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={displayEmotions} layout="vertical" barSize={14}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-              <XAxis type="number" tick={{ fill: "var(--text-secondary)", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "var(--text-secondary)", fontSize: 12 }} axisLine={false} tickLine={false} width={55} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="value" radius={[0, 8, 8, 0]}>
-                {displayEmotions.map((e, i) => (
-                  <rect key={i} fill={e.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {emotionsData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={emotionsData} layout="vertical" barSize={14}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                <XAxis type="number" tick={{ fill: "var(--text-secondary)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fill: "var(--text-secondary)", fontSize: 12 }} axisLine={false} tickLine={false} width={55} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" radius={[0, 8, 8, 0]}>
+                  {emotionsData.map((e, i) => (
+                    <rect key={i} fill={e.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-48 text-sm" style={{ color: "var(--text-secondary)" }}>
+              Not enough data yet.
+            </div>
+          )}
         </div>
 
         {/* Recommendations */}
@@ -319,7 +303,7 @@ export default function DashboardPage() {
                 />
               ))}
             </div>
-          ) : (
+          ) : recommendations.length > 0 ? (
             <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
               {recommendations.map((rec, i) => (
                 <div
@@ -343,6 +327,8 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          ) : (
+            <div className="text-sm" style={{ color: "var(--text-secondary)" }}>No recommendations available yet. Chat with MindCare to get personalized suggestions.</div>
           )}
         </div>
       </div>
