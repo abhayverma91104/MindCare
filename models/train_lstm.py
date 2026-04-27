@@ -1,7 +1,7 @@
 """
 train_lstm.py
 -------------
-Trains a Keras LSTM model on the chat_dataset.csv for 4-class emotion
+Trains a Keras LSTM model on the chat_dataset.csv for 6-class emotion
 detection: anxious / sad / angry / neutral.
 
 Outputs:
@@ -31,7 +31,7 @@ BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR   = os.path.join(BASE_DIR, "..", "data")
 MODELS_DIR = BASE_DIR
 
-CHAT_CSV   = os.path.join(DATA_DIR, "chat_dataset.csv")
+CHAT_CSV   = os.path.join(DATA_DIR, "text.csv")
 MAX_WORDS  = 5000
 MAX_LEN    = 30
 EMBED_DIM  = 64
@@ -43,10 +43,10 @@ DROPOUT    = 0.4
 
 def load_chat_data():
     if not os.path.exists(CHAT_CSV):
-        raise FileNotFoundError(
-            "chat_dataset.csv not found. Run `python data/generate_dataset.py` first."
-        )
-    df = pd.read_csv(CHAT_CSV).dropna()
+        raise FileNotFoundError("text.csv not found.")
+    df = pd.read_csv(CHAT_CSV).dropna(subset=['text', 'label'])
+    label_map = {0: "sadness", 1: "joy", 2: "love", 3: "anger", 4: "fear", 5: "surprise"}
+    df["emotion"] = df["label"].map(label_map)
     return df["text"].values, df["emotion"].values
 
 
