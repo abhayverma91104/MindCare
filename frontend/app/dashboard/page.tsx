@@ -139,7 +139,7 @@ export default function DashboardPage() {
 
           if (msgs.length > 0) {
             setTotalSessions(msgs.length);
-            const counts: Record<string, number> = { "Anxious": 0, "Neutral": 0, "Sad": 0, "Angry": 0, "Joy": 0 };
+            const counts: Record<string, number> = { "Sadness": 0, "Joy": 0, "Love": 0, "Anger": 0, "Fear": 0, "Surprise": 0 };
             let hasEmotions = false;
             
             msgs.forEach((m: any) => {
@@ -157,11 +157,12 @@ export default function DashboardPage() {
               setAvgMood(topEmotion);
               
               setEmotionsData([
-                { name: "Anxious", value: counts["Anxious"] || 0, fill: "#f59e0b" },
-                { name: "Neutral", value: counts["Neutral"] || 0, fill: "#5b8dee" },
-                { name: "Sad",     value: counts["Sad"] || 0,     fill: "#7c6fdf" },
-                { name: "Angry",   value: counts["Angry"] || 0,   fill: "#ef4444" },
+                { name: "Sadness", value: counts["Sadness"] || 0, fill: "#7c6fdf" },
                 { name: "Joy",     value: counts["Joy"] || 0,     fill: "#3ecf8e" },
+                { name: "Love",    value: counts["Love"] || 0,    fill: "#ec4899" },
+                { name: "Anger",   value: counts["Anger"] || 0,   fill: "#ef4444" },
+                { name: "Fear",    value: counts["Fear"] || 0,    fill: "#f59e0b" },
+                { name: "Surprise",value: counts["Surprise"]|| 0, fill: "#a78bfa" },
               ]);
             }
           }

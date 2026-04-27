@@ -46,7 +46,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL   = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")  # fast & cost-efficient
 
 MEMORY_LIMIT   = 20          # max messages kept per session
-CRISIS_HOTLINE = os.getenv("CRISIS_HOTLINE", "9152987821")
+CRISIS_HOTLINE = "iCall (India): 9152987821  |  Vandrevala Foundation: 1860-2662-345  |  International: befrienders.org"
 
 PERSONALITY_MODES = {
     "coach": (
@@ -239,16 +239,16 @@ def chat(
     confidence     = (emotion_result or {}).get("confidence",     0.5)
 
     # Dynamic stress and burnout adjustment based on chat emotion
-    if emotion == "anxious":
+    if emotion == "fear":
         stress_level = "High"
         burnout_score = min(100.0, burnout_score + 3.0)
-    elif emotion == "sad" or emotion == "angry":
+    elif emotion == "sadness" or emotion == "anger":
         stress_level = "High" if burnout_score > 65 else "Moderate"
         burnout_score = min(100.0, burnout_score + 2.0)
-    elif emotion == "joy":
+    elif emotion == "joy" or emotion == "love":
         stress_level = "Low"
         burnout_score = max(0.0, burnout_score - 4.0)
-    else: # neutral
+    else: # surprise or neutral
         stress_level = "Low" if burnout_score < 40 else "Moderate"
         burnout_score = max(0.0, burnout_score - 1.0)
 

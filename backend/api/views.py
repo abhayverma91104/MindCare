@@ -276,11 +276,12 @@ def config_view(request):
             { "value": "listener", "label": "👂 Listener", "desc": "Empathetic" },
         ],
         "emotion_emojis": {
-            "anxious": "😰",
-            "sad": "😔",
-            "angry": "😤",
-            "neutral": "😐",
-            "joy": "😚"
+            "sadness": "😔",
+            "joy": "😚",
+            "love": "🥰",
+            "anger": "😤",
+            "fear": "😰",
+            "surprise": "😮"
         },
         "stress_colors": {
             "Low": "stress-low",
