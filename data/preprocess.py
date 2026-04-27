@@ -20,7 +20,7 @@ MODELS_DIR  = os.path.join(BASE_DIR, "..", "models")
 DATA_DIR    = BASE_DIR
 
 STRESS_CSV  = os.path.join(DATA_DIR, "stress_dataset.csv")
-CHAT_CSV    = os.path.join(DATA_DIR, "chat_dataset.csv")
+CHAT_CSV    = os.path.join(DATA_DIR, "text.csv")
 
 os.makedirs(MODELS_DIR, exist_ok=True)
 
@@ -82,9 +82,12 @@ def preprocess_stress():
 # Text / chat data
 # ---------------------------------------------------------------------------
 def preprocess_chat():
-    print("\nPreprocessing chat dataset...")
+    print("\nPreprocessing text emotion dataset...")
     df = pd.read_csv(CHAT_CSV)
-    df.dropna(inplace=True)
+    df.dropna(subset=['text', 'label'], inplace=True)
+    
+    label_map = {0: "sadness", 1: "joy", 2: "love", 3: "anger", 4: "fear", 5: "surprise"}
+    df["emotion"] = df["label"].map(label_map)
 
     texts  = df["text"].values
     labels = df["emotion"].values

@@ -202,8 +202,8 @@ EMOTION_SENTENCES = {
 def generate_chat_dataset():
     rows = []
     for label, sentences in EMOTION_SENTENCES.items():
-        # Multiply each category to get ~600 samples per class
-        for i in range(30):
+        # Multiply each category to get 2000 samples per class (total 10000)
+        for i in range(100):
             for sentence in sentences:
                 # Add slight noise variation
                 rows.append({
