@@ -1,8 +1,8 @@
 """
 train_lstm.py
 -------------
-Trains a Keras LSTM model on the chat_dataset.csv for 6-class emotion
-detection: anxious / sad / angry / neutral.
+Trains a Keras LSTM model on the text.csv for 6-class emotion
+detection: sadness / joy / love / anger / fear / surprise.
 
 Outputs:
   - models/lstm_emotion.h5 (or .keras)
