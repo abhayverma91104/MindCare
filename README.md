@@ -10,11 +10,12 @@
 |---|---|
 | **Stress Prediction** | Logistic Regression, Random Forest, SVM on DASS/PSS questionnaire data |
 | **Burnout Score** | Random Forest Regressor outputs a 0-100 burnout risk score |
-| **Emotion Detection** | Bidirectional LSTM trained on 2,400 labeled sentences (4 classes) |
+| **Emotion Detection** | Bidirectional LSTM trained on 400,000+ Kaggle sentences (6 classes) |
 | **Gemini Chatbot** | System-prompt engineered, 20-message rolling memory, personality modes |
 | **Safety Layer** | Crisis/self-harm keyword detection → emergency response + helpline (iCall: 9152987821) |
 | **NLP Analysis** | VADER sentiment + NLTK preprocessing + emotion-to-stress mapping |
 | **Dashboard** | Recharts burnout gauge, 7-day trend line, emotion bar chart |
+| **Session History** | Persistent chat history and past prediction tracking |
 | **Multilingual** | Chat in English, Hindi, Spanish, French, Bengali, Tamil, and more |
 | **Personalization** | Recommendations adapt to stress level, emotion, and interaction history |
 
@@ -31,7 +32,8 @@ Django REST API (backend/)
   ├── /api/predict    ← ML stress + burnout models
   ├── /api/chat       ← Gemini pipeline
   ├── /api/recommend  ← Personalization engine
-  └── /api/history    ← Session history
+  ├── /api/history    ← Session history
+  └── /api/config     ← Global UI configuration
         │
         ├── models/ (scikit-learn + Keras LSTM)
         ├── utils/  (NLP analyzer)
@@ -195,7 +197,12 @@ Returns personalized coping strategy recommendations.
 ---
 
 ### `GET /api/history/<user_id>`
-Returns message history and past predictions.
+Returns the last 50 chat messages and last 10 predictions for the user. Used to populate the Dashboard and History views.
+
+---
+
+### `GET /api/config`
+Returns global project configurations, including crisis hotlines, supported languages, chatbot personalities, and UI styling tokens (emotion emojis, stress color mappings).
 
 ---
 
@@ -214,8 +221,8 @@ Health check endpoint.
 
 ### LSTM Emotion Detector
 1. **Architecture:** Embedding (64-dim) → BiLSTM (64) → Dropout → BiLSTM (32) → Dense → Softmax
-2. **Training:** 2,400 labeled chat sentences, 4 classes, EarlyStopping
-3. **Output:** anxious / sad / angry / neutral + confidence score
+2. **Training:** 400,000+ labeled Kaggle sentences, 6 classes, EarlyStopping
+3. **Output:** sadness / joy / love / anger / fear / surprise + confidence score
 
 ### Gemini Chatbot Pipeline
 1. **System Prompt:** Injects stress level, emotion, burnout score, personality mode
@@ -249,13 +256,15 @@ MindCare/
 ├── data/
 │   ├── generate_dataset.py    # Synthetic data generation (stress + chat)
 │   ├── preprocess.py          # Cleaning, scaling, tokenization
-│   └── feature_engineering.py # Composite features + TF-IDF
+│   ├── feature_engineering.py # Composite features + TF-IDF
+│   └── text.csv               # Raw emotion text dataset
 │
 ├── models/
 │   ├── train_classical.py     # LR + RF + SVM training
 │   ├── train_lstm.py          # BiLSTM emotion model training
 │   ├── predict.py             # Inference module (used by Django)
-│   └── *.pkl / *.keras        # Saved model artifacts (after training)
+│   ├── *.pkl                  # Saved models (rf, svm, lr, scaler, encoders)
+│   └── *.keras                # Keras LSTM model artifact
 │
 ├── utils/
 │   └── nlp_analyzer.py        # NLTK/VADER NLP + crisis detection
@@ -272,7 +281,8 @@ MindCare/
 │   └── app/
 │       ├── page.tsx           # Landing page
 │       ├── chat/page.tsx      # Chat interface (Claude-style)
-│       └── dashboard/page.tsx # Stress dashboard with charts
+│       ├── dashboard/page.tsx # Stress dashboard with charts
+│       └── history/page.tsx   # Session history & logs
 │
 ├── docker-compose.yml
 ├── Dockerfile.backend
@@ -299,9 +309,9 @@ MindCare/
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 14, React, TypeScript, Tailwind CSS, Recharts |
-| Backend | Python 3.11, Django 4.2, Django REST Framework |
-| ML | scikit-learn 1.3, TensorFlow/Keras 2.13 |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS v4, Recharts |
+| Backend | Python 3.11+, Django 3.2, Django REST Framework |
+| ML | scikit-learn 1.3, TensorFlow 2.15 |
 | NLP | NLTK (VADER), spaCy |
 | LLM | Google Gemini 1.5 Flash API |
 | Database | SQLite (dev), MongoDB/djongo (prod) |
